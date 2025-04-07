@@ -1,0 +1,202 @@
+<html>
+    <head>
+        <title>Space Invaders</title>
+        <link rel="stylesheet" href="style.css"></link>
+        <!-- add javascript sources-->
+        <script src="src/space-invaders/game.js"></script>
+        <script src="src/space-invaders/gameStates/initialState.js"></script>
+        <script src="src/space-invaders/gameStates/playState.js"></script>
+        <script src="src/space-invaders/gameStates/pauseState.js"></script>
+        <script src="src/space-invaders/gameStates/deadState.js"></script>
+        <script src="src/space-invaders/gameStates/waveTransitionState.js"></script>
+        <script src="src/space-invaders/gameStates/infoState.js"></script>
+        <script src="src/space-invaders/imageLoader.js"></script>
+        
+        <style>
+            /* Estilos existentes del juego */
+            
+            /* Estilos del ranking */
+            .ranking {
+                background-color: #2c3e50;
+                color: white;
+                width: 200px;
+                padding: 15px;
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+                font-family: Arial, sans-serif;
+                z-index: 100; /* Asegura que el ranking esté sobre el canvas */
+            }
+            
+            .ranking h2 {
+                margin: 0 0 10px 0;
+                padding-bottom: 5px;
+                border-bottom: 1px solid #34495e;
+                text-align: center;
+                font-size: 18px;
+            }
+            
+            .ranking-header {
+                display: flex;
+                justify-content: space-between;
+                font-weight: bold;
+                margin-bottom: 8px;
+                padding: 0 5px;
+                color: #ecf0f1;
+            }
+            
+            .ranking-item {
+                display: flex;
+                justify-content: space-between;
+                padding: 6px 5px;
+                margin-bottom: 5px;
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 4px;
+            }
+            
+            .ranking-item:nth-child(2) { /* Primer lugar */
+                background-color: rgba(241, 196, 15, 0.3);
+            }
+            
+            .ranking-item:nth-child(3) { /* Segundo lugar */
+                background-color: rgba(189, 195, 199, 0.3);
+            }
+            
+            .ranking-item:nth-child(4) { /* Tercer lugar */
+                background-color: rgba(230, 126, 34, 0.3);
+            }
+            
+            .position {
+                font-weight: bold;
+                width: 20px;
+            }
+            
+            .name {
+                flex-grow: 1;
+                margin-left: 10px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .score {
+                font-weight: bold;
+                color: #f1c40f;
+            }
+        </style>
+    </head>
+
+    <body>
+        <!-- Canvas del juego -->
+        <canvas id="game-canvas" width="1200" height="700"></canvas>
+        
+        <!-- Contenedor del ranking -->
+        <div class="ranking">
+            <h2>Ranking</h2>
+            <div class="ranking-header">
+                <span>Nombre</span>
+                <span>Puntaje</span>
+            </div>
+            <div id="ranking-list"></div>
+        </div>
+
+        <script>
+            // Options that control various aspects of the game and images I use in each of the game states.
+            // These can be changed to change how various parts of the game perform
+            var constants = {
+                maxInvaders: 56,
+                lives: 3,
+                startingInvaderRows: 2,
+                invaderColumns: 8,
+                waveDifficultyMultiplier: 0.3,
+                images: {
+                    menu: [
+                        "src/space-invaders/res/menuBG.jpg",
+                        "src/space-invaders/res/deadBG.jpg"
+                    ],
+                    backgrounds: [
+                        "src/space-invaders/res/space1.jpg",
+                        "src/space-invaders/res/space2.jpg",
+                        "src/space-invaders/res/space3.jpg",
+                        "src/space-invaders/res/space4.jpg",
+                    ],
+                    invaders: [
+                        "src/space-invaders/res/invaders/invader1.png",
+                        "src/space-invaders/res/invaders/invader2.png",
+                        "src/space-invaders/res/invaders/invader3.png",
+                        "src/space-invaders/res/invaders/invader4.png",
+                        "src/space-invaders/res/invaders/invader5.png",
+                        "src/space-invaders/res/invaders/invader6.png",
+                    ],
+                    player: [
+                        "src/space-invaders/res/player_ship.png"
+                    ]
+                }
+            };
+
+            // Función para actualizar el ranking
+            function actualizarRanking(nuevosDatos) {
+                nuevosDatos.sort(function(a, b) {
+                    return b.value - a.value;
+                });
+                
+                var topPlayers = nuevosDatos.slice(0, 5);
+                var rankingHTML = '';
+                
+                topPlayers.forEach(function(player, index) {
+                    rankingHTML += `
+                        <div class="ranking-item">
+                            <span class="position">${index + 1}</span>
+                            <span class="name">${player.player}</span>
+                            <span class="score">${player.value}</span>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('ranking-list').innerHTML = rankingHTML;
+            }
+
+            // Datos iniciales del ranking (puedes cargarlos desde localStorage o una API)
+            var rankingData = JSON.parse(localStorage.getItem('spaceInvadersRanking')) || [
+                {"player":"Jaled","value":250},
+                {"player":"Eliana","value":151},
+                {"player":"Federico","value":151},
+                {"player":"Santiago","value":500},
+                {"player":"Benjamin","value":80}
+            ];
+            
+            // Mostrar el ranking inicial
+            actualizarRanking(rankingData);
+
+            // Función para agregar un nuevo puntaje al ranking
+            function agregarAlRanking(nombreJugador, puntaje) {
+                rankingData.push({"player": nombreJugador, "value": puntaje});
+                actualizarRanking(rankingData);
+                // Guardar en localStorage
+                localStorage.setItem('spaceInvadersRanking', JSON.stringify(rankingData));
+            }
+
+            var game = new Game(constants);
+            game.start();
+
+            // Ejemplo de cómo agregar un puntaje (deberías llamar esto cuando el jugador pierda)
+            // agregarAlRanking("Nuevo Jugador", 300);
+
+            //  Listen for keyboard events.
+            window.addEventListener("keydown", function keydown(e) {
+                var keycode = e.which || window.event.keycode;
+                //  Supress further processing of left/right/space (37/29/32)
+                if(keycode == 37 || keycode == 39 || keycode == 32) {
+                    e.preventDefault();
+                }
+                game.keyDown(keycode);
+            });
+            window.addEventListener("keyup", function keydown(e) {
+                var keycode = e.which || window.event.keycode;
+                game.keyUp(keycode);
+            });
+        </script>
+    </body>
+</html>
