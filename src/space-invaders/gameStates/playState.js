@@ -93,6 +93,7 @@ PlayState.prototype.update = function(game, delta) {
             bomb.dx = 250;
             this.invaderBullets.push(bomb);
             console.log("Bala disparada por un invasor en posición:", canFire[i].x, canFire[i].y);
+            registrarEvento("AlienhacePIUM");
         }
     }
 
@@ -113,10 +114,12 @@ PlayState.prototype.update = function(game, delta) {
     if(game.keysPressed[37]) {
         this.player.x -= 120 * delta;
         console.log("Jugador se mueve a la izquierda");
+        registrarEvento("moverIzquierda");
     }
     if(game.keysPressed[39]) {
         this.player.x += 120 * delta;
         console.log("Jugador se mueve a la derecha");
+        registrarEvento("moverDerecha");
     }
     //Stop player going off screen
     if(this.player.x <= 0) this.player.x = 0;
@@ -129,6 +132,7 @@ PlayState.prototype.update = function(game, delta) {
             this.invaderBullets.splice(i--, 1);
             game.lives--;
             console.log("¡Colisión! El jugador fue alcanzado por una bala de invasor. Vidas restantes:", game.lives);
+            registrarEvento("colisionJugador")
         }
     }
 
@@ -312,3 +316,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const rankingData = cargarRanking();
     actualizarRankingVisual(rankingData);
 });
+
+function registrarEvento(nombreEvento) {
+    try {
+        let registro = localStorage.getItem(nombreEvento);
+        let data = registro ? JSON.parse(registro) : { count: 0, last: null };
+
+        data.count += 1;
+        data.last = new Date().toISOString();
+
+        localStorage.setItem(nombreEvento, JSON.stringify(data));
+    } catch (e) {
+        console.error("Error guardando evento en localStorage:", nombreEvento, e);
+    }
+}
