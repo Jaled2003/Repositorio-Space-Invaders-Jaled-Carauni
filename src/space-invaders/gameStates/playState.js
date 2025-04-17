@@ -150,14 +150,7 @@ PlayState.prototype.update = function(game, delta) {
     //Check game over
     if(game.lives === 0){
         if(game.score > game.topScore) game.topScore = game.score;
-        
-        // Añadir el puntaje al ranking
-        if(window.agregarAlRanking) {
-            const nombreJugador = prompt("Game Over! Ingresa tu nombre para el ranking:", "Jugador");
-            if(nombreJugador) {
-                window.agregarAlRanking(nombreJugador, game.score);
-            }
-        }
+    
         
         game.changeState(new DeadState());
     }

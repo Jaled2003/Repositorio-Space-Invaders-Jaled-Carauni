@@ -91,10 +91,48 @@
             font-weight: bold;
             color: #f1c40f;
         }
+
+        /* Estilos para el modal de nombre */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content {
+            background-color: #2c3e50;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+            color: white;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: none;
+        }
+
+        .modal-content button {
+            background-color: #f1c40f;
+            color: #2c3e50;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
-
-
 
 <body>
     <!-- Canvas del juego -->
@@ -108,6 +146,15 @@
             <span>Puntaje</span>
         </div>
         <div id="ranking-list"></div>
+    </div>
+
+    <!-- Modal para ingresar el nombre (solo al inicio) -->
+    <div id="nameModal" class="modal">
+        <div class="modal-content">
+            <h2>Ingresa tu nombre</h2>
+            <input type="text" id="playerName" placeholder="Tu nombre" maxlength="20" />
+            <button id="startGame">Comenzar</button>
+        </div>
     </div>
 
     <script>
@@ -142,62 +189,122 @@
             }
         };
 
+        // Variables globales
+        let playerName = '';
+        let currentScore = 0;
+        let scoreUpdateInterval;
+        let game;
         const socket = new WebSocket("wss://gamehubmanager-ucp2025.azurewebsites.net/ws");
         let isSocketReady = false;
 
-        socket.onopen = function (e) {
-            console.log("Conexión WebSocket establecida");
-            isSocketReady = true;
-            // Solicitar los datos actuales del ranking al servidor
-            socket.send(JSON.stringify({
-                "game": "space_invaders",
-                "event": "get_ranking",
-                "player": "",
-                "value": 0
-            }));
-        };
+        // Función para iniciar el juego
+        function startGame() {
+            document.getElementById('nameModal').style.display = 'none';
+            
+            // Configurar WebSocket
+            socket.onopen = function (e) {
+                console.log("Conexión WebSocket establecida");
+                isSocketReady = true;
+                // Solicitar los datos actuales del ranking al servidor
+                socket.send(JSON.stringify({
+                    "game": "space_invaders",
+                    "event": "get_ranking",
+                    "player": "",
+                    "value": 0
+                }));
+            };
 
-        socket.onmessage = function (event) {
-            try {
-                const data = JSON.parse(event.data);
+            socket.onmessage = function (event) {
+                try {
+                    const data = JSON.parse(event.data);
 
-                // Verificar si es una respuesta de ranking
-                if (data.game && data.players) {
-                    // Transformar la respuesta del servidor al formato que espera nuestra función
-                    const rankingData = data.players.map(player => ({
-                        "player": player.eventName,
-                        "value": player.value
-                    }));
+                    // Verificar si es una respuesta de ranking
+                    if (data.game && data.players) {
+                        const rankingData = data.players.map(player => ({
+                            "player": player.eventName,
+                            "value": player.value
+                        }));
 
-                    actualizarRanking(rankingData);
-                    // Guardar en localStorage
-                    localStorage.setItem('spaceInvadersRanking', JSON.stringify(rankingData));
+                        actualizarRanking(rankingData);
+                        localStorage.setItem('spaceInvadersRanking', JSON.stringify(rankingData));
+                    }
+                } catch (error) {
+                    console.error("Error al procesar mensaje del servidor:", error);
+                    actualizarRanking(JSON.parse(localStorage.getItem('spaceInvadersRanking')) || []);
                 }
-            } catch (error) {
-                console.error("Error al procesar mensaje del servidor:", error);
-                // Mostrar datos locales si hay error
-                actualizarRanking(JSON.parse(localStorage.getItem('spaceInvadersRanking')) || []);
-            }
-        };
+            };
 
-        socket.onclose = function (event) {
-            if (event.wasClean) {
-                console.log(`Conexión cerrada limpiamente, código=${event.code} motivo=${event.reason}`);
-            } else {
-                console.log('La conexión se cayó');
-            }
-            isSocketReady = false;
-        };
+            socket.onclose = function (event) {
+                if (event.wasClean) {
+                    console.log(`Conexión cerrada limpiamente, código=${event.code} motivo=${event.reason}`);
+                } else {
+                    console.log('La conexión se cayó');
+                }
+                isSocketReady = false;
+            };
 
-        socket.onerror = function (error) {
-            console.log(`Error en WebSocket: ${error.message}`);
-            isSocketReady = false;
-        };
+            socket.onerror = function (error) {
+                console.log(`Error en WebSocket: ${error.message}`);
+                isSocketReady = false;
+            };
+
+            // Iniciar el juego
+            game = new Game(constants);
+            game.start();
+
+            // Configurar intervalo para actualizar el puntaje durante el juego
+            scoreUpdateInterval = setInterval(function() {
+                if (game && game.score !== undefined && game.score !== currentScore) {
+                    currentScore = game.score;
+                    actualizarPuntajeJugador(playerName, currentScore);
+                }
+            }, 1000);
+
+            // Listen for keyboard events
+            window.addEventListener("keydown", function keydown(e) {
+                var keycode = e.which || window.event.keycode;
+                if (keycode == 37 || keycode == 39 || keycode == 32) {
+                    e.preventDefault();
+                }
+                game.keyDown(keycode);
+            });
+            window.addEventListener("keyup", function keydown(e) {
+                var keycode = e.which || window.event.keycode;
+                game.keyUp(keycode);
+            });
+        }
+
+        // Mostrar modal para ingresar el nombre al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('nameModal').style.display = 'block';
+            document.getElementById('playerName').focus();
+            
+            document.getElementById('startGame').addEventListener('click', function() {
+                const nameInput = document.getElementById('playerName').value.trim();
+                if (nameInput) {
+                    playerName = nameInput;
+                    startGame();
+                } else {
+                    alert('Por favor ingresa un nombre válido');
+                }
+            });
+            
+            document.getElementById('playerName').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const nameInput = document.getElementById('playerName').value.trim();
+                    if (nameInput) {
+                        playerName = nameInput;
+                        startGame();
+                    } else {
+                        alert('Por favor ingresa un nombre válido');
+                    }
+                }
+            });
+        });
 
         // Función para actualizar el ranking
         function actualizarRanking(nuevosDatos) {
             if (!nuevosDatos || nuevosDatos.length === 0) {
-                // Si no hay datos, usar los del localStorage
                 nuevosDatos = JSON.parse(localStorage.getItem('spaceInvadersRanking')) || [
                     { "player": "Jaled", "value": 250 },
                     { "player": "Eliana", "value": 151 },
@@ -207,14 +314,11 @@
                 ];
             }
 
-            nuevosDatos.sort(function (a, b) {
-                return b.value - a.value;
-            });
-
+            nuevosDatos.sort((a, b) => b.value - a.value);
             var topPlayers = nuevosDatos.slice(0, 5);
             var rankingHTML = '';
 
-            topPlayers.forEach(function (player, index) {
+            topPlayers.forEach((player, index) => {
                 rankingHTML += `
                     <div class="ranking-item">
                         <span class="position">${index + 1}</span>
@@ -227,45 +331,45 @@
             document.getElementById('ranking-list').innerHTML = rankingHTML;
         }
 
+        // Función para actualizar el puntaje del jugador actual
+        function actualizarPuntajeJugador(nombre, puntaje) {
+            if (isSocketReady) {
+                socket.send(JSON.stringify({
+                    "game": "space_invaders",
+                    "event": "update_score",
+                    "player": nombre,
+                    "value": puntaje
+                }));
+            }
+            
+            let rankingData = JSON.parse(localStorage.getItem('spaceInvadersRanking')) || [];
+            let playerExists = false;
+            
+            rankingData = rankingData.map(player => {
+                if (player.player === nombre) {
+                    playerExists = true;
+                    return { "player": nombre, "value": Math.max(puntaje, player.value) };
+                }
+                return player;
+            });
+            
+            if (!playerExists) {
+                rankingData.push({ "player": nombre, "value": puntaje });
+            }
+            
+            localStorage.setItem('spaceInvadersRanking', JSON.stringify(rankingData));
+            actualizarRanking(rankingData);
+        }
 
-
-        var rankingData = JSON.parse(localStorage.getItem('spaceInvadersRanking')) || [
+        // Mostrar el ranking inicial
+        actualizarRanking(JSON.parse(localStorage.getItem('spaceInvadersRanking')) || [
             { "player": "Jaled", "value": 250 },
             { "player": "Eliana", "value": 151 },
             { "player": "Federico", "value": 151 },
             { "player": "Santiago", "value": 500 },
             { "player": "Benjamin", "value": 80 }
-        ];
-
-
-
-        // Mostrar el ranking inicial
-        actualizarRanking(rankingData);
-
-        // Función para agregar un nuevo puntaje al ranking
-        function agregarAlRanking(nombreJugador, puntaje) {
-            const nuevoPuntaje = { "player": nombreJugador, "value": puntaje };
-            
-            // Agregar al ranking local
-            rankingData.push(nuevoPuntaje);
-            actualizarRanking(rankingData);
-            
-            // Guardar en localStorage
-            localStorage.setItem('spaceInvadersRanking', JSON.stringify(rankingData));
-            
-            // Enviar al servidor si la conexión está activa
-            if (isSocketReady) {
-                socket.send(JSON.stringify({
-                    "game": "space_invaders",
-                    "event": "update_score",
-                    "player": nombreJugador,
-                    "value": puntaje
-                }));
-            }
-        }
-
-        var game = new Game(constants);
-        game.start();
+        ]);
+   
 
         // Ejemplo de cómo agregar un puntaje (deberías llamar esto cuando el jugador pierda)
         // agregarAlRanking("Nuevo Jugador", 300);
