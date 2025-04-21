@@ -1,4 +1,5 @@
 {
+  "start_url": "/",
   "name": "InvasoresDelEspacio",
   "theme_color": "#000000",
   "background_color": "#000000",
@@ -30,5 +31,10 @@
       "purpose": "any"
     }
   ],
-  "start_url": "/"
+  "id": "/",
+  "lang": "es",
+  "dir": "auto",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "scope": "/"
 }
