@@ -394,17 +394,9 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registrado correctamente');
-                        // Opcional: Forzar actualización si hay una nueva versión
-                        registration.update();
-                    })
-                    .catch(err => {
-                        console.error('Error al registrar ServiceWorker:', err);
-                    });
-            });
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker registrado con éxito', reg))
+                .catch(err => console.error('Error al registrar el Service Worker', err));
         }
     </script>
 </body>
