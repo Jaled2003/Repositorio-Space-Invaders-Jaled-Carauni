@@ -1,4 +1,4 @@
-const CACHE_NAME = "v70";
+const CACHE_NAME = "v4";
 const OFFLINE_PAGE = [
   '/',
   '/index.html',
