@@ -37,4 +37,12 @@
   "display": "fullscreen",
   "orientation": "landscape",
   "scope": "/"
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/games?hl=es_419&amp;pli=1",
+      "id": ""
+    }
+  ]
+}
 }
