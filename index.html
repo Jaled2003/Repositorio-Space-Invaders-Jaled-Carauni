@@ -202,7 +202,7 @@
         // Función para iniciar el juego
         function startGame() {
             document.getElementById('nameModal').style.display = 'none';
-            
+
             // Configurar WebSocket
             socket.onopen = function (e) {
                 console.log("Conexión WebSocket establecida");
@@ -255,7 +255,7 @@
             game.start();
 
             // Configurar intervalo para actualizar el puntaje durante el juego
-            scoreUpdateInterval = setInterval(function() {
+            scoreUpdateInterval = setInterval(function () {
                 if (game && game.score !== undefined && game.score !== currentScore) {
                     currentScore = game.score;
                     actualizarPuntajeJugador(playerName, currentScore);
@@ -277,11 +277,11 @@
         }
 
         // Mostrar modal para ingresar el nombre al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('nameModal').style.display = 'block';
             document.getElementById('playerName').focus();
-            
-            document.getElementById('startGame').addEventListener('click', function() {
+
+            document.getElementById('startGame').addEventListener('click', function () {
                 const nameInput = document.getElementById('playerName').value.trim();
                 if (nameInput) {
                     playerName = nameInput;
@@ -290,8 +290,8 @@
                     alert('Por favor ingresa un nombre válido');
                 }
             });
-            
-            document.getElementById('playerName').addEventListener('keydown', function(e) {
+
+            document.getElementById('playerName').addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     const nameInput = document.getElementById('playerName').value.trim();
                     if (nameInput) {
@@ -343,10 +343,10 @@
                     "value": puntaje
                 }));
             }
-            
+
             let rankingData = JSON.parse(localStorage.getItem('spaceInvadersRanking')) || [];
             let playerExists = false;
-            
+
             rankingData = rankingData.map(player => {
                 if (player.player === nombre) {
                     playerExists = true;
@@ -354,11 +354,11 @@
                 }
                 return player;
             });
-            
+
             if (!playerExists) {
                 rankingData.push({ "player": nombre, "value": puntaje });
             }
-            
+
             localStorage.setItem('spaceInvadersRanking', JSON.stringify(rankingData));
             actualizarRanking(rankingData);
         }
@@ -371,7 +371,7 @@
             { "player": "Santiago", "value": 500 },
             { "player": "Benjamin", "value": 80 }
         ]);
-   
+
 
         // Ejemplo de cómo agregar un puntaje (deberías llamar esto cuando el jugador pierda)
         // agregarAlRanking("Nuevo Jugador", 300);
@@ -389,6 +389,15 @@
             var keycode = e.which || window.event.keycode;
             game.keyUp(keycode);
         });
+
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker registrado con éxito', reg))
+                .catch(err => console.error('Error al registrar el Service Worker', err));
+        }
     </script>
 </body>
 
