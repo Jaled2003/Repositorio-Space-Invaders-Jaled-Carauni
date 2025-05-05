@@ -17,7 +17,7 @@ function PlayState(config, wave) {
     this.bgIndex = Math.round(Math.random() * (game.images.backgrounds.length-1));
     this.barrierPieces = [];
     this.hardRows = 1;
-    this.mediumRows = wave == 1 ? 1:2;
+    this.mediumRows = wave === 1 ? 1:2;
 }
 
 // module.exports = PlayState;
@@ -166,7 +166,7 @@ PlayState.prototype.draw = function(game, delta, context) {
         else imageIndex = 4;
 
         //Make invaders fade as they are hit by changing canvas transparency
-        if(invader.hitpoints == 3) context.globalAlpha = 1;
+        if(invader.hitpoints === 3) context.globalAlpha = 1;
         else if(invader.hitpoints === 2) context.globalAlpha = 0.8;
         else context.globalAlpha = 0.6;
 
@@ -204,7 +204,7 @@ PlayState.prototype.draw = function(game, delta, context) {
 }
 
 PlayState.prototype.keyDown = function(game, keyCode) {
-    if(keyCode == 32 || keyCode == 38) {
+    if(keyCode === 32 || keyCode === 38) {
         if(!this.shotFired && (new Date()).valueOf() - this.lastFired > 300){
             this.shotFired = true;
             this.bulletsFired.push(new Bullet(this.player.x + this.player.width / 2 - 2.5, this.player.y));
@@ -217,7 +217,7 @@ PlayState.prototype.keyDown = function(game, keyCode) {
 };
 
 PlayState.prototype.keyUp = function(game, keyCode) {
-    if(keyCode == 37 || keyCode == 39) { //Left or right key - stop player movement on keyUp
+    if(keyCode === 37 || keyCode === 39) { //Left or right key - stop player movement on keyUp
         this.player.dx = 0;
     }
     if(keyCode === 32 || keyCode === 38) { //Space or up key - reset shotFired on keyUp
