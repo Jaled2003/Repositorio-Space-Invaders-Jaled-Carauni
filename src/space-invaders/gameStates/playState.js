@@ -211,7 +211,7 @@ PlayState.prototype.keyDown = function(game, keyCode) {
             this.lastFired = new Date().valueOf();
         }
     }
-    if(keyCode == 80) { //P key - push pause state
+    if(keyCode === 80) { //P key - push pause state
         game.addState(new PauseState());
     }
 };
