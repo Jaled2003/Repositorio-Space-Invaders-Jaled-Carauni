@@ -204,23 +204,23 @@ PlayState.prototype.draw = function(game, delta, context) {
 }
 
 PlayState.prototype.keyDown = function(game, keyCode) {
-    if(keyCode === 32 || keyCode === 38) {
+    if(keyCode == 32 || keyCode == 38) {
         if(!this.shotFired && (new Date()).valueOf() - this.lastFired > 300){
             this.shotFired = true;
             this.bulletsFired.push(new Bullet(this.player.x + this.player.width / 2 - 2.5, this.player.y));
             this.lastFired = new Date().valueOf();
         }
     }
-    if(keyCode === 80) { //P key - push pause state
+    if(keyCode == 80) { //P key - push pause state
         game.addState(new PauseState());
     }
 };
 
 PlayState.prototype.keyUp = function(game, keyCode) {
-    if(keyCode === 37 || keyCode === 39) { //Left or right key - stop player movement on keyUp
+    if(keyCode == 37 || keyCode === 39) { //Left or right key - stop player movement on keyUp
         this.player.dx = 0;
     }
-    if(keyCode === 32 || keyCode === 38) { //Space or up key - reset shotFired on keyUp
+    if(keyCode == 32 || keyCode === 38) { //Space or up key - reset shotFired on keyUp
         this.shotFired = false;
     }
 };
