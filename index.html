@@ -135,26 +135,26 @@
         }
 
         #install-button {
-            position: fixed;
-            top: 820px;
-            left: 890px;
-            padding: 10px 20px;
-            font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-            font-style:normal;
-            font-size: 20px;
-            border-radius: 15px;
-            background-color: #00e0f0;
-            border-color: #f1c40f;
-        }
-
-        
+                position: relative;
+                bottom: 0;
+                left: 50%;
+                top: 90px;
+                transform: translateX(-50%);
+                padding: 10px 20px;
+                font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                font-style: normal;
+                font-size: 20px;
+                border-radius: 15px;
+                background-color: #00e0f0;
+                border-color: #f1c40f;
+            }
     </style>
 </head>
 
 <body>
     <!-- Canvas del juego -->
     <canvas id="game-canvas" width="1200" height="700"></canvas>
-    
+
 
     <button id="install-button">Instalar aplicación</button>
 
@@ -411,57 +411,57 @@
     </script>
 
     <script>
-        // Variables para el manejo de instalación PWA
+        
         let deferredPrompt;
         const installButton = document.getElementById('install-button');
 
-        // Función para ocultar el botón de instalación
+        
         function hideInstallButton() {
             installButton.style.display = 'none';
             deferredPrompt = null;
         }
 
-        // Evento cuando el navegador detecta que la app es instalable
+        
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevenir que el navegador muestre su propio prompt
+            
             e.preventDefault();
-            // Guardar el evento para usarlo luego
+            
             deferredPrompt = e;
-            // Mostrar nuestro botón de instalación
+            
             installButton.style.display = 'block';
         });
 
-        // Evento cuando el usuario hace clic en el botón de instalación
+       
         installButton.addEventListener('click', async () => {
             if (!deferredPrompt) return;
 
-            // Mostrar el prompt de instalación
+            
             deferredPrompt.prompt();
 
-            // Esperar la decisión del usuario
+            
             const { outcome } = await deferredPrompt.userChoice;
 
-            // Registrar el resultado
+            
             console.log(`Usuario ${outcome} la instalación`);
 
-            // Ocultar el botón independientemente del resultado
+            
             hideInstallButton();
         });
 
-        // Evento cuando la app es instalada (por cualquier método)
+        
         window.addEventListener('appinstalled', () => {
             console.log('La PWA fue instalada');
             hideInstallButton();
         });
 
-        // Verificar si la app ya está instalada (para cuando se carga la página)
+        
         window.addEventListener('load', () => {
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 hideInstallButton();
             }
         });
 
-        // Registrar el Service Worker
+        
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => console.log('Service Worker registrado con éxito', reg))
