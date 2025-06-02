@@ -34,8 +34,8 @@ InitialState.prototype.draw = function(game, delta, context) {
     game.drawText(" = 5 PTS, 1 HP", "#18f9e7", game.height/2 - 20, 'medium');
 
     if(game.score > 0) game.drawText("Top Score: " + game.topScore,"#ffffff", game.height - 120, "medium");
-    game.drawText("Move using the arrow keys and shoot using ^ or \'Space\'", '#ffffff', game.height-50, 'small');
-    game.drawText("The game can be paused at any time by pressing '\P\'", '#ffffff', game.height-25, 'small');
+    game.drawText("Move using the arrow keys or tilt your device", '#ffffff', game.height-50, 'small');
+    game.drawText("Shoot using ^ or \'Space\'. Pause with \'P\'", '#ffffff', game.height-25, 'small');
 };
 
 InitialState.prototype.keyDown = function(game, keyCode) {

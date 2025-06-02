@@ -111,15 +111,25 @@ PlayState.prototype.update = function(game, delta) {
     }
 
     //Move player
-    if(game.keysPressed[37]) {
-        this.player.x -= 120 * delta;
-        console.log("Jugador se mueve a la izquierda");
-        registrarEvento("moverIzquierda");
-    }
-    if(game.keysPressed[39]) {
-        this.player.x += 120 * delta;
-        console.log("Jugador se mueve a la derecha");
-        registrarEvento("moverDerecha");
+    if(game.gyroEnabled) {
+        // Use gyroscope for movement
+        this.player.x += game.gyroX * 200 * delta;
+        if(game.gyroX !== 0) {
+            console.log("Jugador se mueve con giroscopio:", game.gyroX > 0 ? "derecha" : "izquierda");
+            registrarEvento(game.gyroX > 0 ? "moverDerecha" : "moverIzquierda");
+        }
+    } else {
+        // Fallback to keyboard controls
+        if(game.keysPressed[37]) {
+            this.player.x -= 120 * delta;
+            console.log("Jugador se mueve a la izquierda");
+            registrarEvento("moverIzquierda");
+        }
+        if(game.keysPressed[39]) {
+            this.player.x += 120 * delta;
+            console.log("Jugador se mueve a la derecha");
+            registrarEvento("moverDerecha");
+        }
     }
     //Stop player going off screen
     if(this.player.x <= 0) this.player.x = 0;
