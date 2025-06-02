@@ -135,19 +135,19 @@
         }
 
         #install-button {
-                position: relative;
-                bottom: 0;
-                left: 50%;
-                top: 90px;
-                transform: translateX(-50%);
-                padding: 10px 20px;
-                font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-                font-style: normal;
-                font-size: 20px;
-                border-radius: 15px;
-                background-color: #00e0f0;
-                border-color: #f1c40f;
-            }
+            position: relative;
+            bottom: 0;
+            left: 50%;
+            top: 90px;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            font-style: normal;
+            font-size: 20px;
+            border-radius: 15px;
+            background-color: #00e0f0;
+            border-color: #f1c40f;
+        }
     </style>
 </head>
 
@@ -411,62 +411,121 @@
     </script>
 
     <script>
-        
+
         let deferredPrompt;
         const installButton = document.getElementById('install-button');
 
-        
+
         function hideInstallButton() {
             installButton.style.display = 'none';
             deferredPrompt = null;
         }
 
-        
+
         window.addEventListener('beforeinstallprompt', (e) => {
-            
+
             e.preventDefault();
-            
+
             deferredPrompt = e;
-            
+
             installButton.style.display = 'block';
         });
 
-       
+
         installButton.addEventListener('click', async () => {
             if (!deferredPrompt) return;
 
-            
+
             deferredPrompt.prompt();
 
-            
+
             const { outcome } = await deferredPrompt.userChoice;
 
-            
+
             console.log(`Usuario ${outcome} la instalación`);
 
-            
+
             hideInstallButton();
         });
 
-        
+
         window.addEventListener('appinstalled', () => {
             console.log('La PWA fue instalada');
             hideInstallButton();
         });
 
-        
+
         window.addEventListener('load', () => {
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 hideInstallButton();
             }
         });
 
-        
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => console.log('Service Worker registrado con éxito', reg))
                 .catch(err => console.error('Error al registrar el Service Worker', err));
         }
+    </script>
+
+
+    <div id="gyro-indicator" style="
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 10px 15px;
+    font-family: Arial, sans-serif;
+    border-radius: 8px;
+    z-index: 1000;">
+        Giro: 0°
+    </div>
+
+    <script>
+        function requestOrientationPermission() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                            console.log("Permiso otorgado para giroscopio");
+                        } else {
+                            alert('Permiso denegado para acceder al giroscopio.');
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error solicitando permiso de orientación:", err);
+                    });
+            } else {
+                // Android y otros navegadores
+                window.addEventListener('deviceorientation', handleOrientation);
+                console.log("Giroscopio activado (sin necesidad de permiso)");
+            }
+        }
+
+        function handleOrientation(event) {
+            const gamma = event.gamma; // -90 (izquierda) a 90 (derecha)
+
+            const indicator = document.getElementById("gyro-indicator");
+            indicator.textContent = `Giro: ${gamma.toFixed(2)}°`;
+
+            if (gamma > 10) {
+                console.log("Moviéndose hacia la derecha");
+            } else if (gamma < -10) {
+                console.log("Moviéndose hacia la izquierda");
+            } else {
+                console.log("Centro");
+            }
+        }
+
+        // Activar giroscopio al primer toque
+        window.addEventListener('click', function initGyroOnce() {
+            requestOrientationPermission();
+            window.removeEventListener('click', initGyroOnce);
+        });
     </script>
 </body>
 
