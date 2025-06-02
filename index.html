@@ -135,69 +135,19 @@
         }
 
         #install-button {
-            position: relative;
-            bottom: 0;
-            left: 50%;
-            top: 90px;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-            font-style: normal;
-            font-size: 20px;
-            border-radius: 15px;
-            background-color: #00e0f0;
-            border-color: #f1c40f;
-        }
-
-        /* Estilos para el indicador de giroscopio */
-        #gyro-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            z-index: 100;
-            transition: all 0.3s;
-            font-size: 18px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        /* Estados del indicador */
-        #gyro-indicator.active {
-            background-color: #f1c40f;
-            transform: scale(1.1);
-        }
-
-        #gyro-indicator.success {
-            background-color: #2ecc71;
-        }
-
-        #gyro-indicator.error {
-            background-color: #e74c3c;
-        }
-
-        /* Estilo para el botón de calibración */
-        #calibrate-button {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            padding: 8px 15px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            z-index: 100;
-            cursor: pointer;
-        }
+                position: relative;
+                bottom: 0;
+                left: 50%;
+                top: 90px;
+                transform: translateX(-50%);
+                padding: 10px 20px;
+                font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                font-style: normal;
+                font-size: 20px;
+                border-radius: 15px;
+                background-color: #00e0f0;
+                border-color: #f1c40f;
+            }
     </style>
 </head>
 
@@ -205,8 +155,8 @@
     <!-- Canvas del juego -->
     <canvas id="game-canvas" width="1200" height="700"></canvas>
 
+
     <button id="install-button">Instalar aplicación</button>
-    <button id="calibrate-button" style="display: none;">Calibrar</button>
 
     <!-- Contenedor del ranking -->
     <div class="ranking">
@@ -217,9 +167,6 @@
         </div>
         <div id="ranking-list"></div>
     </div>
-
-    <!-- Indicador de giroscopio -->
-    <div id="gyro-indicator">↔</div>
 
     <!-- Modal para ingresar el nombre (solo al inicio) -->
     <div id="nameModal" class="modal">
@@ -269,13 +216,6 @@
         let game;
         const socket = new WebSocket("wss://gamehubmanager-ucp2025.azurewebsites.net/ws");
         let isSocketReady = false;
-
-        // Variables para el control del giroscopio
-        let gyroAvailable = false;
-        let gyroCalibration = 0; // Valor de calibración
-        const GYRO_THRESHOLD = 8; // Sensibilidad del giroscopio
-        const gyroIndicator = document.getElementById('gyro-indicator');
-        const calibrateButton = document.getElementById('calibrate-button');
 
         // Función para iniciar el juego
         function startGame() {
@@ -339,9 +279,6 @@
                     actualizarPuntajeJugador(playerName, currentScore);
                 }
             }, 1000);
-
-            // Inicializar controles de giroscopio
-            initGyro();
 
             // Listen for keyboard events
             window.addEventListener("keydown", function keydown(e) {
@@ -453,161 +390,77 @@
             { "player": "Benjamin", "value": 80 }
         ]);
 
-        // =============================================
-        // IMPLEMENTACIÓN DEL GIROSCOPIO PARA ANDROID
-        // =============================================
 
-        function initGyro() {
-            if (window.DeviceOrientationEvent) {
-                // Dispositivos iOS 13+ requieren solicitud de permiso
-                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    DeviceOrientationEvent.requestPermission()
-                        .then(permissionState => {
-                            if (permissionState === 'granted') {
-                                startGyroTracking();
-                            } else {
-                                showGyroPermissionAlert();
-                            }
-                        })
-                        .catch(console.error);
-                } else {
-                    // Android y otros navegadores
-                    startGyroTracking();
-                }
-            } else {
-                console.log("Giroscopio no soportado en este navegador");
-                showGyroUnsupportedMessage();
+        // Ejemplo de cómo agregar un puntaje (deberías llamar esto cuando el jugador pierda)
+        // agregarAlRanking("Nuevo Jugador", 300);
+
+        //  Listen for keyboard events.
+        window.addEventListener("keydown", function keydown(e) {
+            var keycode = e.which || window.event.keycode;
+            //  Supress further processing of left/right/space (37/29/32)
+            if (keycode == 37 || keycode == 39 || keycode == 32) {
+                e.preventDefault();
             }
-        }
+            game.keyDown(keycode);
+        });
+        window.addEventListener("keyup", function keydown(e) {
+            var keycode = e.which || window.event.keycode;
+            game.keyUp(keycode);
+        });
 
-        function startGyroTracking() {
-            // Mostrar botón de calibración
-            calibrateButton.style.display = 'block';
-            calibrateButton.addEventListener('click', calibrateGyro);
+    </script>
 
-            // Agregar listener con parámetros para mejor rendimiento
-            window.addEventListener('deviceorientation', handleOrientation, true);
-            gyroAvailable = true;
-            console.log("Seguimiento de giroscopio activado");
-            
-            // Mostrar mensaje de éxito
-            gyroIndicator.classList.add('success');
-            gyroIndicator.textContent = '✓';
-            setTimeout(() => {
-                gyroIndicator.classList.remove('success');
-                gyroIndicator.textContent = '↔';
-            }, 2000);
-        }
-
-        function calibrateGyro() {
-            // Esto se establecerá en el próximo evento de orientación
-            gyroCalibration = null;
-            gyroIndicator.textContent = '⌛';
-            gyroIndicator.classList.add('active');
-            
-            // Temporizador en caso de que no llegue el evento
-            setTimeout(() => {
-                if (gyroCalibration === null) {
-                    gyroCalibration = 0;
-                    gyroIndicator.textContent = '↔';
-                    gyroIndicator.classList.remove('active');
-                    alert("No se pudo calibrar. Asegúrate de que el sensor esté funcionando.");
-                }
-            }, 3000);
-        }
-
-        function handleOrientation(event) {
-            if (!game || !game.player) return;
-            
-            const gamma = event.gamma; // Inclinación lateral (izquierda/derecha)
-            
-            // Si estamos calibrando, establecer el valor actual como centro
-            if (gyroCalibration === null) {
-                gyroCalibration = gamma;
-                gyroIndicator.textContent = '✓';
-                gyroIndicator.classList.remove('active');
-                setTimeout(() => {
-                    gyroIndicator.textContent = '↔';
-                }, 1000);
-                return;
-            }
-            
-            // Aplicar calibración
-            const adjustedGamma = gamma - gyroCalibration;
-            
-            if (Math.abs(adjustedGamma) > GYRO_THRESHOLD) {
-                gyroIndicator.classList.add('active');
-                gyroIndicator.textContent = adjustedGamma > 0 ? '→' : '←';
-                
-                if (adjustedGamma > GYRO_THRESHOLD) {
-                    game.keyDown(39); // Derecha
-                    game.keyUp(37);  // Asegurarse que izquierda no está presionada
-                    console.log("Moviendo derecha (gamma ajustado:", adjustedGamma.toFixed(2), ")");
-                } else {
-                    game.keyDown(37); // Izquierda
-                    game.keyUp(39);  // Asegurarse que derecha no está presionada
-                    console.log("Moviendo izquierda (gamma ajustado:", adjustedGamma.toFixed(2), ")");
-                }
-            } else {
-                gyroIndicator.classList.remove('active');
-                gyroIndicator.textContent = '↔';
-                game.keyUp(37);
-                game.keyUp(39);
-            }
-        }
-
-        function showGyroPermissionAlert() {
-            alert("Para jugar con controles de movimiento, por favor permite el acceso al sensor en la configuración de tu navegador.");
-            gyroIndicator.classList.add('error');
-            gyroIndicator.textContent = '!';
-        }
-
-        function showGyroUnsupportedMessage() {
-            gyroIndicator.classList.add('error');
-            gyroIndicator.textContent = '✗';
-            console.log("Este dispositivo/navegador no soporta controles por movimiento");
-        }
-
-        // =============================================
-        // CÓDIGO PARA INSTALACIÓN DE PWA
-        // =============================================
+    <script>
         
         let deferredPrompt;
         const installButton = document.getElementById('install-button');
+
         
         function hideInstallButton() {
             installButton.style.display = 'none';
             deferredPrompt = null;
         }
+
         
         window.addEventListener('beforeinstallprompt', (e) => {
+            
             e.preventDefault();
+            
             deferredPrompt = e;
+            
             installButton.style.display = 'block';
         });
+
        
         installButton.addEventListener('click', async () => {
             if (!deferredPrompt) return;
+
             
             deferredPrompt.prompt();
+
             
             const { outcome } = await deferredPrompt.userChoice;
+
             
             console.log(`Usuario ${outcome} la instalación`);
+
             
             hideInstallButton();
         });
+
         
         window.addEventListener('appinstalled', () => {
             console.log('La PWA fue instalada');
             hideInstallButton();
         });
+
         
         window.addEventListener('load', () => {
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 hideInstallButton();
             }
         });
+
         
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
@@ -616,4 +469,5 @@
         }
     </script>
 </body>
+
 </html>
