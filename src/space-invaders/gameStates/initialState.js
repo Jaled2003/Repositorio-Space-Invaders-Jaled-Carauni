@@ -14,14 +14,7 @@ InitialState.prototype.draw = function(game, delta, context) {
     context.clearRect(0,0,game.width,game.height);
     context.drawImage(game.images.backgrounds[0],0,0,game.width,game.height);
     game.drawText("Space Invaders", "#ffffff", game.height/6, 'large');
-    // Usar la función global esMovil si existe, si no, detectar móvil localmente
-    var isMobile = (typeof esMovil === 'function' && esMovil()) ||
-        (/Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia("(max-width: 800px)").matches));
-    if (isMobile) {
-        game.drawText("Toca la pantalla para comenzar","#ffffff", game.height/6 + 50, 'medium');
-    } else {
-        game.drawText("Press '\Enter\' to begin","#ffffff", game.height/6 + 50, 'medium');
-    }
+    game.drawText("Press '\Enter\' to begin","#ffffff", game.height/6 + 50, 'medium');
 
     //Draw invader images
     if(game.framesDrawn % 100 > 50) {
@@ -53,13 +46,3 @@ InitialState.prototype.keyDown = function(game, keyCode) {
         game.changeState(new PlayState(game.constants, game.wave));
     }
 };
-
-// Permitir iniciar con touch en móvil
-document.getElementById('game-canvas') && document.getElementById('game-canvas').addEventListener('touchstart', function() {
-    if (game.getCurrentState && game.getCurrentState().stateName === 'InitialState') {
-        game.wave = 1;
-        game.score = 0;
-        game.lives = 3;
-        game.changeState(new PlayState(game.constants, game.wave));
-    }
-});
