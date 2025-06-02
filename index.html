@@ -6,6 +6,7 @@
     </link>
     <link rel="manifest" href="manifest.json" />
 
+    <!-- add javascript sources-->
     <script src="src/space-invaders/game.js"></script>
     <script src="src/space-invaders/gameStates/initialState.js"></script>
     <script src="src/space-invaders/gameStates/playState.js"></script>
@@ -134,56 +135,30 @@
         }
 
         #install-button {
-            position: relative;
-            bottom: 0;
-            left: 50%;
-            top: 90px;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-            font-style: normal;
-            font-size: 20px;
-            border-radius: 15px;
-            background-color: #00e0f0;
-            border-color: #f1c40f;
-        }
-
-        /* Estilos para el indicador del giroscopio */
-        #gyro-status {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            font-size: 1em;
-            z-index: 100;
-            min-width: 150px; /* Asegura que el texto quepa */
-            text-align: center;
-            display: none; /* Oculto por defecto hasta que se intente habilitar */
-        }
-
-        #gyro-status.active {
-            background-color: #28a745; /* Verde cuando está activo y moviéndose */
-        }
-
-        #gyro-status.inactive {
-            background-color: #dc3545; /* Rojo si no está activo o hay un error */
-        }
-        #gyro-status.stable {
-            background-color: #ffc107; /* Amarillo cuando está habilitado pero quieto */
-        }
+                position: relative;
+                bottom: 0;
+                left: 50%;
+                top: 90px;
+                transform: translateX(-50%);
+                padding: 10px 20px;
+                font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                font-style: normal;
+                font-size: 20px;
+                border-radius: 15px;
+                background-color: #00e0f0;
+                border-color: #f1c40f;
+            }
     </style>
 </head>
 
 <body>
+    <!-- Canvas del juego -->
     <canvas id="game-canvas" width="1200" height="700"></canvas>
 
 
     <button id="install-button">Instalar aplicación</button>
 
+    <!-- Contenedor del ranking -->
     <div class="ranking">
         <h2>Ranking</h2>
         <div class="ranking-header">
@@ -193,8 +168,7 @@
         <div id="ranking-list"></div>
     </div>
 
-    <div id="gyro-status">Giroscopio: No disponible</div>
-
+    <!-- Modal para ingresar el nombre (solo al inicio) -->
     <div id="nameModal" class="modal">
         <div class="modal-content">
             <h2>Ingresa tu nombre</h2>
@@ -243,111 +217,9 @@
         const socket = new WebSocket("wss://gamehubmanager-ucp2025.azurewebsites.net/ws");
         let isSocketReady = false;
 
-        // Variables para el giroscopio
-        let gyroscopeThreshold = 5; // Grados de inclinación para considerar movimiento
-        let lastMovementDirection = 0; // 0: estable, -1: izquierda, 1: derecha
-        let leftArrowKeycode = 37; // Keycode para la flecha izquierda
-        let rightArrowKeycode = 39; // Keycode para la flecha derecha
-
-        // Referencia al elemento del indicador de giroscopio
-        const gyroStatusElement = document.getElementById('gyro-status');
-
-        // Función para manejar la orientación del dispositivo (giroscopio)
-        function handleDeviceOrientation(event) {
-            if (!game || !game.player) {
-                // Si el juego no está listo, solo actualiza el estado del giroscopio si está habilitado
-                gyroStatusElement.textContent = "Giroscopio: Habilitado (Esperando juego)";
-                gyroStatusElement.classList.remove('active', 'inactive');
-                gyroStatusElement.classList.add('stable');
-                return;
-            }
-
-            const gamma = event.gamma; // Movimiento de lado a lado (eje Y)
-
-            // console.log("Gamma:", gamma.toFixed(2)); // Mostrar en consola el valor de gamma
-
-            if (gamma > gyroscopeThreshold && lastMovementDirection !== 1) {
-                // Mover a la derecha
-                console.log("¡Moviéndose a la DERECHA! Gamma:", gamma.toFixed(2));
-                game.keyDown(rightArrowKeycode);
-                game.keyUp(leftArrowKeycode); // Asegúrate de soltar la tecla izquierda
-                lastMovementDirection = 1;
-                gyroStatusElement.textContent = "Giroscopio: Derecha";
-                gyroStatusElement.classList.remove('stable', 'inactive');
-                gyroStatusElement.classList.add('active');
-            } else if (gamma < -gyroscopeThreshold && lastMovementDirection !== -1) {
-                // Mover a la izquierda
-                console.log("¡Moviéndose a la IZQUIERDA! Gamma:", gamma.toFixed(2));
-                game.keyDown(leftArrowKeycode);
-                game.keyUp(rightArrowKeycode); // Asegúrate de soltar la tecla derecha
-                lastMovementDirection = -1;
-                gyroStatusElement.textContent = "Giroscopio: Izquierda";
-                gyroStatusElement.classList.remove('stable', 'inactive');
-                gyroStatusElement.classList.add('active');
-            } else if (Math.abs(gamma) <= gyroscopeThreshold && lastMovementDirection !== 0) {
-                // Detener movimiento si está estable
-                console.log("Estable. Gamma:", gamma.toFixed(2));
-                game.keyUp(leftArrowKeycode);
-                game.keyUp(rightArrowKeycode);
-                lastMovementDirection = 0;
-                gyroStatusElement.textContent = "Giroscopio: Estable";
-                gyroStatusElement.classList.remove('active', 'inactive');
-                gyroStatusElement.classList.add('stable');
-            }
-        }
-
-        // Función para solicitar permiso y habilitar el giroscopio
-        async function enableGyroscope() {
-            gyroStatusElement.style.display = 'block'; // Mostrar el indicador
-            gyroStatusElement.textContent = "Giroscopio: Intentando habilitar...";
-            gyroStatusElement.classList.remove('active', 'stable');
-            gyroStatusElement.classList.add('inactive');
-
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                // Para iOS 13+
-                try {
-                    const permissionState = await DeviceOrientationEvent.requestPermission();
-                    if (permissionState === 'granted') {
-                        window.addEventListener('deviceorientation', handleDeviceOrientation);
-                        console.log("Permiso de DeviceOrientation concedido y giroscopio habilitado.");
-                        gyroStatusElement.textContent = "Giroscopio: Habilitado (Estable)";
-                        gyroStatusElement.classList.remove('inactive', 'active');
-                        gyroStatusElement.classList.add('stable');
-                    } else {
-                        console.warn("Permiso denegado para acceder a los sensores de orientación.");
-                        gyroStatusElement.textContent = "Giroscopio: Permiso denegado";
-                        gyroStatusElement.classList.remove('active', 'stable');
-                        gyroStatusElement.classList.add('inactive');
-                    }
-                } catch (error) {
-                    console.error("Error al solicitar permisos para DeviceOrientation:", error);
-                    gyroStatusElement.textContent = "Giroscopio: Error";
-                    gyroStatusElement.classList.remove('active', 'stable');
-                    gyroStatusElement.classList.add('inactive');
-                }
-            } else {
-                // Para navegadores que no requieren permiso explícito (ej. Android Chrome)
-                if (window.DeviceOrientationEvent) {
-                    window.addEventListener('deviceorientation', handleDeviceOrientation);
-                    console.log("DeviceOrientationEvent soportado y giroscopio habilitado automáticamente.");
-                    gyroStatusElement.textContent = "Giroscopio: Habilitado (Estable)";
-                    gyroStatusElement.classList.remove('inactive', 'active');
-                    gyroStatusElement.classList.add('stable');
-                } else {
-                    console.warn("DeviceOrientationEvent no soportado o no en contexto seguro (HTTPS). El movimiento con giroscopio no estará disponible.");
-                    gyroStatusElement.textContent = "Giroscopio: No soportado";
-                    gyroStatusElement.classList.remove('active', 'stable');
-                    gyroStatusElement.classList.add('inactive');
-                }
-            }
-        }
-
         // Función para iniciar el juego
         function startGame() {
             document.getElementById('nameModal').style.display = 'none';
-
-            // Habilitar el giroscopio al iniciar el juego
-            enableGyroscope();
 
             // Configurar WebSocket
             socket.onopen = function (e) {
@@ -408,28 +280,19 @@
                 }
             }, 1000);
 
-            // Listen for keyboard events (mantén esto para soporte de teclado)
-            window.removeEventListener("keydown", handleKeyboardDown); // Eliminar el listener original si existe
-            window.removeEventListener("keyup", handleKeyboardUp); // Eliminar el listener original si existe
-
-            window.addEventListener("keydown", handleKeyboardDown);
-            window.addEventListener("keyup", handleKeyboardUp);
+            // Listen for keyboard events
+            window.addEventListener("keydown", function keydown(e) {
+                var keycode = e.which || window.event.keycode;
+                if (keycode == 37 || keycode == 39 || keycode == 32) {
+                    e.preventDefault();
+                }
+                game.keyDown(keycode);
+            });
+            window.addEventListener("keyup", function keydown(e) {
+                var keycode = e.which || window.event.keycode;
+                game.keyUp(keycode);
+            });
         }
-
-        // Funciones para manejar eventos de teclado (separadas para que el giroscopio no las interfiera directamente)
-        function handleKeyboardDown(e) {
-            var keycode = e.which || window.event.keycode;
-            if (keycode == 37 || keycode == 39 || keycode == 32) {
-                e.preventDefault();
-            }
-            if (game) game.keyDown(keycode);
-        }
-
-        function handleKeyboardUp(e) {
-            var keycode = e.which || window.event.keycode;
-            if (game) game.keyUp(keycode);
-        }
-
 
         // Mostrar modal para ingresar el nombre al cargar la página
         document.addEventListener('DOMContentLoaded', function () {
@@ -526,60 +389,79 @@
             { "player": "Santiago", "value": 500 },
             { "player": "Benjamin", "value": 80 }
         ]);
+
+
+        // Ejemplo de cómo agregar un puntaje (deberías llamar esto cuando el jugador pierda)
+        // agregarAlRanking("Nuevo Jugador", 300);
+
+        //  Listen for keyboard events.
+        window.addEventListener("keydown", function keydown(e) {
+            var keycode = e.which || window.event.keycode;
+            //  Supress further processing of left/right/space (37/29/32)
+            if (keycode == 37 || keycode == 39 || keycode == 32) {
+                e.preventDefault();
+            }
+            game.keyDown(keycode);
+        });
+        window.addEventListener("keyup", function keydown(e) {
+            var keycode = e.which || window.event.keycode;
+            game.keyUp(keycode);
+        });
+
     </script>
 
     <script>
-
+        
         let deferredPrompt;
         const installButton = document.getElementById('install-button');
 
-
+        
         function hideInstallButton() {
             installButton.style.display = 'none';
             deferredPrompt = null;
         }
 
-
+        
         window.addEventListener('beforeinstallprompt', (e) => {
-
+            
             e.preventDefault();
-
+            
             deferredPrompt = e;
-
+            
             installButton.style.display = 'block';
         });
 
-
+       
         installButton.addEventListener('click', async () => {
             if (!deferredPrompt) return;
 
-
+            
             deferredPrompt.prompt();
 
-
+            
             const { outcome } = await deferredPrompt.userChoice;
 
-
+            
             console.log(`Usuario ${outcome} la instalación`);
 
-
+            
             hideInstallButton();
         });
 
-
+        
         window.addEventListener('appinstalled', () => {
             console.log('La PWA fue instalada');
             hideInstallButton();
         });
 
-
+        
         window.addEventListener('load', () => {
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 hideInstallButton();
             }
         });
 
-
+        
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => console.log('Service Worker registrado con éxito', reg))
