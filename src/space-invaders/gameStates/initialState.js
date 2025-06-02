@@ -6,11 +6,6 @@
 function InitialState() {
     this.stateName = 'InitialState';
     this.invaders = [];
-    
-    // Add touch event listeners
-    this.canvas = document.getElementById('game-canvas');
-    this.canvas.addEventListener('touchstart', this.handleTouch.bind(this), { passive: false });
-    this.canvas.addEventListener('click', this.handleTouch.bind(this));
 }
 
 // module.exports = InitialState;
@@ -19,7 +14,7 @@ InitialState.prototype.draw = function(game, delta, context) {
     context.clearRect(0,0,game.width,game.height);
     context.drawImage(game.images.backgrounds[0],0,0,game.width,game.height);
     game.drawText("Space Invaders", "#ffffff", game.height/6, 'large');
-    game.drawText("Toca la pantalla o presiona 'Enter' para comenzar","#ffffff", game.height/6 + 50, 'medium');
+    game.drawText("Press '\Enter\' to begin","#ffffff", game.height/6 + 50, 'medium');
 
     //Draw invader images
     if(game.framesDrawn % 100 > 50) {
@@ -39,8 +34,8 @@ InitialState.prototype.draw = function(game, delta, context) {
     game.drawText(" = 5 PTS, 1 HP", "#18f9e7", game.height/2 - 20, 'medium');
 
     if(game.score > 0) game.drawText("Top Score: " + game.topScore,"#ffffff", game.height - 120, "medium");
-    game.drawText("Move using the arrow keys or tilt your device", '#ffffff', game.height-50, 'small');
-    game.drawText("Shoot using ^ or \'Space\'. Pause with \'P\'", '#ffffff', game.height-25, 'small');
+    game.drawText("Move using the arrow keys and shoot using ^ or \'Space\'", '#ffffff', game.height-50, 'small');
+    game.drawText("The game can be paused at any time by pressing '\P\'", '#ffffff', game.height-25, 'small');
 };
 
 InitialState.prototype.keyDown = function(game, keyCode) {
@@ -50,15 +45,4 @@ InitialState.prototype.keyDown = function(game, keyCode) {
         game.lives = 3;
         game.changeState(new PlayState(game.constants, game.wave));
     }
-};
-
-InitialState.prototype.handleTouch = function(event) {
-    event.preventDefault(); // Prevent default touch behavior
-    console.log('Touch/Click event detected');
-    
-    // Start the game
-    game.wave = 1;
-    game.score = 0;
-    game.lives = 3;
-    game.changeState(new PlayState(game.constants, game.wave));
 };

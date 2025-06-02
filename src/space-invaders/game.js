@@ -16,29 +16,6 @@ function Game(constants) {
     var imageLoader = new ImageLoader();
     this.images = imageLoader.loadImages(constants.images);
     this.framesDrawn = 0;
-    this.gyroX = 0; // Store gyroscope X value
-    this.gyroEnabled = false; // Flag to track if gyroscope is available
-
-    // Request device orientation permission and set up event listener
-    if (window.DeviceOrientationEvent) {
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // iOS 13+ requires permission
-            this.canvas.addEventListener('click', () => {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
-                            this.gyroEnabled = true;
-                        }
-                    })
-                    .catch(console.error);
-            });
-        } else {
-            // Android and other devices
-            window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
-            this.gyroEnabled = true;
-        }
-    }
 };
 
 // module.exports = Game;
@@ -204,9 +181,3 @@ function BarrierPiece(xpos, ypos) {
     this.height = 5;
     this.hitpoints = 3;
 }
-
-// Add device orientation handler
-Game.prototype.handleOrientation = function(event) {
-    // Get gamma value (left/right tilt) and normalize it
-    this.gyroX = Math.min(Math.max(event.gamma, -45), 45) / 45;
-};
