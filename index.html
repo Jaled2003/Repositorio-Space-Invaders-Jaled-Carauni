@@ -135,19 +135,19 @@
         }
 
         #install-button {
-            position: relative;
-            bottom: 0;
-            left: 50%;
-            top: 90px;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-            font-style: normal;
-            font-size: 20px;
-            border-radius: 15px;
-            background-color: #00e0f0;
-            border-color: #f1c40f;
-        }
+                position: relative;
+                bottom: 0;
+                left: 50%;
+                top: 90px;
+                transform: translateX(-50%);
+                padding: 10px 20px;
+                font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                font-style: normal;
+                font-size: 20px;
+                border-radius: 15px;
+                background-color: #00e0f0;
+                border-color: #f1c40f;
+            }
     </style>
 </head>
 
@@ -411,121 +411,63 @@
     </script>
 
     <script>
-
+        
         let deferredPrompt;
         const installButton = document.getElementById('install-button');
 
-
+        
         function hideInstallButton() {
             installButton.style.display = 'none';
             deferredPrompt = null;
         }
 
-
+        
         window.addEventListener('beforeinstallprompt', (e) => {
-
+            
             e.preventDefault();
-
+            
             deferredPrompt = e;
-
+            
             installButton.style.display = 'block';
         });
 
-
+       
         installButton.addEventListener('click', async () => {
             if (!deferredPrompt) return;
 
-
+            
             deferredPrompt.prompt();
 
-
+            
             const { outcome } = await deferredPrompt.userChoice;
 
-
+            
             console.log(`Usuario ${outcome} la instalación`);
 
-
+            
             hideInstallButton();
         });
 
-
+        
         window.addEventListener('appinstalled', () => {
             console.log('La PWA fue instalada');
             hideInstallButton();
         });
 
-
+        
         window.addEventListener('load', () => {
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 hideInstallButton();
             }
         });
 
-
+        
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => console.log('Service Worker registrado con éxito', reg))
                 .catch(err => console.error('Error al registrar el Service Worker', err));
         }
     </script>
-
-    <button id="gyro-button" style="position: absolute; bottom: 20px; right: 20px; z-index: 1000;">Activar
-        giroscopio</button>
-
-    <script>
-        function activarGiroscopio() {
-            if (
-                typeof DeviceOrientationEvent !== 'undefined' &&
-                typeof DeviceOrientationEvent.requestPermission === 'function'
-            ) {
-                DeviceOrientationEvent.requestPermission().then(response => {
-                    if (response === 'granted') {
-                        iniciarSensor();
-                    } else {
-                        alert("Permiso denegado para acceder al giroscopio.");
-                    }
-                }).catch(console.error);
-            } else {
-                // Para navegadores que no requieren permiso
-                iniciarSensor();
-            }
-        }
-
-        function iniciarSensor() {
-            let ultimaDireccion = null;
-
-            window.addEventListener('deviceorientation', (event) => {
-                const gamma = event.gamma; // izquierda/derecha
-                const beta = event.beta;   // adelante/atrás
-                const alpha = event.alpha; // orientación general
-
-                // Mostrar valores en consola
-                console.log(`gamma (izq/der): ${gamma}, beta (adel/atrás): ${beta}, alpha (rotación): ${alpha}`);
-
-                // Mover a la derecha
-                if (gamma > 15 && ultimaDireccion !== 'derecha') {
-                    game?.keyDown(39); // tecla derecha
-                    ultimaDireccion = 'derecha';
-                }
-
-                // Mover a la izquierda
-                else if (gamma < -15 && ultimaDireccion !== 'izquierda') {
-                    game?.keyDown(37); // tecla izquierda
-                    ultimaDireccion = 'izquierda';
-                }
-
-                // Neutral
-                else if (gamma >= -10 && gamma <= 10 && ultimaDireccion !== 'ninguna') {
-                    game?.keyUp(37);
-                    game?.keyUp(39);
-                    ultimaDireccion = 'ninguna';
-                }
-            });
-        }
-
-    </script>
-
-
 </body>
 
 </html>
