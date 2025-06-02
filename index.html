@@ -6,7 +6,6 @@
     </link>
     <link rel="manifest" href="manifest.json" />
 
-    <!-- add javascript sources-->
     <script src="src/space-invaders/game.js"></script>
     <script src="src/space-invaders/gameStates/initialState.js"></script>
     <script src="src/space-invaders/gameStates/playState.js"></script>
@@ -135,30 +134,44 @@
         }
 
         #install-button {
-                position: relative;
-                bottom: 0;
-                left: 50%;
-                top: 90px;
-                transform: translateX(-50%);
-                padding: 10px 20px;
-                font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-                font-style: normal;
-                font-size: 20px;
-                border-radius: 15px;
-                background-color: #00e0f0;
-                border-color: #f1c40f;
-            }
+            position: relative;
+            bottom: 0;
+            left: 50%;
+            top: 90px;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            font-style: normal;
+            font-size: 20px;
+            border-radius: 15px;
+            background-color: #00e0f0;
+            border-color: #f1c40f;
+        }
+
+        /* Estilos para el indicador del giroscopio */
+        #gyro-indicator {
+            background-color: #2c3e50;
+            color: white;
+            width: 200px;
+            padding: 10px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            font-family: Arial, sans-serif;
+            z-index: 100;
+            text-align: center;
+            font-size: 16px;
+        }
     </style>
 </head>
 
 <body>
-    <!-- Canvas del juego -->
     <canvas id="game-canvas" width="1200" height="700"></canvas>
-
 
     <button id="install-button">Instalar aplicación</button>
 
-    <!-- Contenedor del ranking -->
     <div class="ranking">
         <h2>Ranking</h2>
         <div class="ranking-header">
@@ -168,7 +181,10 @@
         <div id="ranking-list"></div>
     </div>
 
-    <!-- Modal para ingresar el nombre (solo al inicio) -->
+    <div id="gyro-indicator">
+        Movimiento Giroscopio: <span id="gyro-value">0.00</span>
+    </div>
+
     <div id="nameModal" class="modal">
         <div class="modal-content">
             <h2>Ingresa tu nombre</h2>
@@ -218,8 +234,25 @@
         let isSocketReady = false;
 
         // Función para iniciar el juego
-        function startGame() {
+        async function startGame() {
             document.getElementById('nameModal').style.display = 'none';
+
+            // Solicitar permisos de DeviceMotion para iOS 13+
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                const permissionState = await DeviceMotionEvent.requestPermission();
+                if (permissionState === 'granted') {
+                    console.log('Permiso de DeviceMotion concedido.');
+                    setupGyroscope();
+                } else {
+                    console.warn('Permiso de DeviceMotion denegado.');
+                    alert('El acceso al giroscopio es necesario para el control por movimiento. Por favor, habilítalo en la configuración de tu dispositivo.');
+                    // Puedes decidir qué hacer si el permiso es denegado, por ejemplo, mantener el control por teclado.
+                }
+            } else {
+                // Navegadores que no requieren solicitud explícita (Android, etc.)
+                console.log('DeviceMotionEvent disponible sin solicitud de permiso.');
+                setupGyroscope();
+            }
 
             // Configurar WebSocket
             socket.onopen = function (e) {
@@ -280,7 +313,7 @@
                 }
             }, 1000);
 
-            // Listen for keyboard events
+            // Listen for keyboard events (mantener para control alternativo)
             window.addEventListener("keydown", function keydown(e) {
                 var keycode = e.which || window.event.keycode;
                 if (keycode == 37 || keycode == 39 || keycode == 32) {
@@ -291,6 +324,43 @@
             window.addEventListener("keyup", function keydown(e) {
                 var keycode = e.which || window.event.keycode;
                 game.keyUp(keycode);
+            });
+        }
+
+        // Función para configurar el giroscopio
+        function setupGyroscope() {
+            const gyroValueElement = document.getElementById('gyro-value');
+            const threshold = 0.5; // Ajusta este valor para la sensibilidad del movimiento
+
+            window.addEventListener('devicemotion', (event) => {
+                const rotationRateGamma = event.rotationRate ? event.rotationRate.gamma : 0; // Giro alrededor del eje Y (izquierda/derecha)
+                const accelerationX = event.accelerationIncludingGravity ? event.accelerationIncludingGravity.x : 0; // Movimiento horizontal
+
+                // Puedes experimentar con rotationRate.gamma o accelerationIncludingGravity.x
+                // Dependiendo de cómo quieres que el usuario incline el dispositivo.
+                // rotationRate.gamma es más para giros, accelerationIncludingGravity.x para inclinaciones laterales.
+
+                // Para Space Invaders, la inclinación lateral (izquierda/derecha) es más intuitiva.
+                // Usaremos accelerationIncludingGravity.x, ya que refleja la inclinación.
+                // Un valor positivo significa inclinación hacia la derecha, negativo hacia la izquierda.
+
+                // Mostrar el valor en la aplicación
+                gyroValueElement.textContent = accelerationX.toFixed(2);
+
+                if (game && game.player) {
+                    if (accelerationX > threshold) {
+                        console.log('Moviendo a la derecha (Giroscopio)');
+                        game.player.setMovingRight(true);
+                        game.player.setMovingLeft(false);
+                    } else if (accelerationX < -threshold) {
+                        console.log('Moviendo a la izquierda (Giroscopio)');
+                        game.player.setMovingLeft(true);
+                        game.player.setMovingRight(false);
+                    } else {
+                        game.player.setMovingLeft(false);
+                        game.player.setMovingRight(false);
+                    }
+                }
             });
         }
 
@@ -411,57 +481,57 @@
     </script>
 
     <script>
-        
+
         let deferredPrompt;
         const installButton = document.getElementById('install-button');
 
-        
+
         function hideInstallButton() {
             installButton.style.display = 'none';
             deferredPrompt = null;
         }
 
-        
+
         window.addEventListener('beforeinstallprompt', (e) => {
-            
+
             e.preventDefault();
-            
+
             deferredPrompt = e;
-            
+
             installButton.style.display = 'block';
         });
 
-       
+
         installButton.addEventListener('click', async () => {
             if (!deferredPrompt) return;
 
-            
+
             deferredPrompt.prompt();
 
-            
+
             const { outcome } = await deferredPrompt.userChoice;
 
-            
+
             console.log(`Usuario ${outcome} la instalación`);
 
-            
+
             hideInstallButton();
         });
 
-        
+
         window.addEventListener('appinstalled', () => {
             console.log('La PWA fue instalada');
             hideInstallButton();
         });
 
-        
+
         window.addEventListener('load', () => {
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 hideInstallButton();
             }
         });
 
-        
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => console.log('Service Worker registrado con éxito', reg))
