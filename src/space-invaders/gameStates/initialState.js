@@ -14,7 +14,10 @@ InitialState.prototype.draw = function(game, delta, context) {
     context.clearRect(0,0,game.width,game.height);
     context.drawImage(game.images.backgrounds[0],0,0,game.width,game.height);
     game.drawText("Space Invaders", "#ffffff", game.height/6, 'large');
-    if (typeof esMovil === 'function' && esMovil()) {
+    // Usar la función global esMovil si existe, si no, detectar móvil localmente
+    var isMobile = (typeof esMovil === 'function' && esMovil()) ||
+        (/Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia("(max-width: 800px)").matches));
+    if (isMobile) {
         game.drawText("Toca la pantalla para comenzar","#ffffff", game.height/6 + 50, 'medium');
     } else {
         game.drawText("Press '\Enter\' to begin","#ffffff", game.height/6 + 50, 'medium');
