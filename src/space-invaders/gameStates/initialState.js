@@ -7,9 +7,10 @@ function InitialState() {
     this.stateName = 'InitialState';
     this.invaders = [];
     
-    // Add touch event listener
+    // Add touch event listeners
     this.canvas = document.getElementById('game-canvas');
-    this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
+    this.canvas.addEventListener('touchstart', this.handleTouch.bind(this), { passive: false });
+    this.canvas.addEventListener('click', this.handleTouch.bind(this));
 }
 
 // module.exports = InitialState;
@@ -53,10 +54,11 @@ InitialState.prototype.keyDown = function(game, keyCode) {
 
 InitialState.prototype.handleTouch = function(event) {
     event.preventDefault(); // Prevent default touch behavior
-    if (game.getCurrentState().stateName === 'InitialState') {
-        game.wave = 1;
-        game.score = 0;
-        game.lives = 3;
-        game.changeState(new PlayState(game.constants, game.wave));
-    }
+    console.log('Touch/Click event detected');
+    
+    // Start the game
+    game.wave = 1;
+    game.score = 0;
+    game.lives = 3;
+    game.changeState(new PlayState(game.constants, game.wave));
 };

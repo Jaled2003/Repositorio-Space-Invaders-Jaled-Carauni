@@ -2,6 +2,7 @@
 
     <head>
         <title>Space Invaders</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="chrome.styles.css"></link>
         <!-- add javascript sources-->
         <script src="game.js"></script>
@@ -20,6 +21,11 @@
       <canvas id="game-canvas" width="1200" height="700"></canvas>
 
         <script>
+        // Prevent default touch behavior
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
         // Options that control various aspects of the game and images I use in each of the game states.
         // These can be changed to change how various parts of the game perform
         var constants = {
