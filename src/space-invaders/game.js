@@ -23,7 +23,7 @@ function Game(constants) {
     if (window.DeviceOrientationEvent) {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             // iOS 13+ requires permission
-            document.addEventListener('click', () => {
+            this.canvas.addEventListener('click', () => {
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
                         if (permissionState === 'granted') {

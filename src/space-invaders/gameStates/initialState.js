@@ -6,6 +6,10 @@
 function InitialState() {
     this.stateName = 'InitialState';
     this.invaders = [];
+    
+    // Add touch event listener
+    this.canvas = document.getElementById('game-canvas');
+    this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
 }
 
 // module.exports = InitialState;
@@ -14,7 +18,7 @@ InitialState.prototype.draw = function(game, delta, context) {
     context.clearRect(0,0,game.width,game.height);
     context.drawImage(game.images.backgrounds[0],0,0,game.width,game.height);
     game.drawText("Space Invaders", "#ffffff", game.height/6, 'large');
-    game.drawText("Press '\Enter\' to begin","#ffffff", game.height/6 + 50, 'medium');
+    game.drawText("Toca la pantalla o presiona 'Enter' para comenzar","#ffffff", game.height/6 + 50, 'medium');
 
     //Draw invader images
     if(game.framesDrawn % 100 > 50) {
@@ -40,6 +44,16 @@ InitialState.prototype.draw = function(game, delta, context) {
 
 InitialState.prototype.keyDown = function(game, keyCode) {
     if(keyCode == 13) {
+        game.wave = 1;
+        game.score = 0;
+        game.lives = 3;
+        game.changeState(new PlayState(game.constants, game.wave));
+    }
+};
+
+InitialState.prototype.handleTouch = function(event) {
+    event.preventDefault(); // Prevent default touch behavior
+    if (game.getCurrentState().stateName === 'InitialState') {
         game.wave = 1;
         game.score = 0;
         game.lives = 3;
