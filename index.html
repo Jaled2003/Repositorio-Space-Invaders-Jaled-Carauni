@@ -15,30 +15,6 @@
     <script src="src/space-invaders/gameStates/infoState.js"></script>
     <script src="src/space-invaders/imageLoader.js"></script>
 
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-
-        // Your web app's Firebase configuration
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-        const firebaseConfig = {
-            apiKey: "AIzaSyAvOsLivsDoawR4Xo8WGaYQhMVZWUDM1b8",
-            authDomain: "notificaciones-push-57965.firebaseapp.com",
-            projectId: "notificaciones-push-57965",
-            storageBucket: "notificaciones-push-57965.firebasestorage.app",
-            messagingSenderId: "488687424643",
-            appId: "1:488687424643:web:0a040b1775d444b9efb7b6",
-            measurementId: "G-YR89GMT735"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-    </script>
-
     <style>
         /* Estilos existentes del juego */
 
@@ -195,8 +171,6 @@
     <canvas id="game-canvas" width="1200" height="700"></canvas>
 
     <button id="install-button">Instalar aplicación</button>
-    <button id="request-notification-permission">Habilitar Notificaciones</button>
-    <div class="ranking"></div>
 
     <div class="ranking">
         <h2>Ranking</h2>
@@ -219,10 +193,7 @@
         </div>
     </div>
 
-    <script type="module"> // Cambiado a type="module" para usar imports
-        import { messaging, getToken, onMessage } from './firebase-config.js'
-
-
+    <script>
         var constants = {
             maxInvaders: 56,
             lives: 3,
@@ -397,7 +368,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('nameModal').style.display = 'block';
             document.getElementById('playerName').focus();
-            document.getElementById('request-notification-permission').addEventListener('click', requestNotificationPermission);
 
             document.getElementById('startGame').addEventListener('click', function () {
                 const nameInput = document.getElementById('playerName').value.trim();
@@ -420,34 +390,6 @@
                     }
                 }
             });
-        });
-
-
-        async function requestNotificationPermission() {
-            console.log('Solicitando permiso de notificación...');
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    console.log('Permiso de notificación concedido.');
-                    const token = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY_FROM_FIREBASE_CONSOLE' }); // Reemplaza con tu clave VAPID
-                    console.log('FCM Token:', token);
-                    // Aquí puedes enviar este token a tu servidor para enviarle notificaciones a este dispositivo.
-                    // Por ejemplo: sendTokenToServer(token);
-                    alert('Notificaciones habilitadas. Tu token de FCM es: ' + token);
-                } else {
-                    console.warn('Permiso de notificación denegado o bloqueado.');
-                    alert('Permiso de notificación denegado. No podrás recibir notificaciones push.');
-                }
-            } catch (error) {
-                console.error('Error al solicitar permiso de notificación o al obtener el token:', error);
-            }
-        }
-
-        // Manejar mensajes recibidos cuando la aplicación está en primer plano
-        onMessage(messaging, (payload) => {
-            console.log('Mensaje recibido en primer plano:', payload);
-            // Aquí puedes mostrar una notificación dentro de la aplicación, un modal, etc.
-            alert('¡Notificación! ' + payload.notification.title + ': ' + payload.notification.body);
         });
 
         // Función para actualizar el ranking
@@ -591,23 +533,11 @@
 
 
         if ('serviceWorker' in navigator) {
-            // Registra tu Service Worker principal
             navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('Service Worker principal registrado con éxito', reg))
-                .catch(err => console.error('Error al registrar el Service Worker principal', err));
-
-            // Registra el Service Worker de Firebase Messaging
-            navigator.serviceWorker.register('/firebase-messaging-sw.js')
-                .then((registration) => {
-                    console.log('Firebase Messaging Service Worker registrado con éxito', registration);
-                    messaging.useServiceWorker(registration); // Asocia el Service Worker con Firebase Messaging
-                })
-                .catch((err) => {
-                    console.error('Error al registrar el Service Worker de Firebase Messaging', err);
-                });
+                .then(reg => console.log('Service Worker registrado con éxito', reg))
+                .catch(err => console.error('Error al registrar el Service Worker', err));
         }
     </script>
-
 </body>
 
 </html>
