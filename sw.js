@@ -10,7 +10,9 @@ const ASSETS_TO_CACHE = [
   '/manifest.json',
   // Incluye las rutas de tus imágenes
   '/src/space-invaders/res/player_ship.png',
-  '/src/space-invaders/res/menuBG.jpg'
+  '/src/space-invaders/res/menuBG.jpg',
+  '/firebase-config.js', // Asegúrate de cachear también tu archivo de configuración de Firebase
+  '/firebase-messaging-sw.js' // Asegúrate de cachear el Service Worker de Firebase
 ];
 
 self.addEventListener('install', (event) => {
@@ -27,7 +29,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   // Solo manejamos solicitudes GET
   if (event.request.method !== 'GET') return;
-  
+
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
@@ -35,7 +37,7 @@ self.addEventListener('fetch', (event) => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        
+
         // Si no está en caché, haz la petición a red
         return fetch(event.request)
           .then(response => {
