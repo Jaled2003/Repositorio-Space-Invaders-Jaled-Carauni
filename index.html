@@ -235,25 +235,40 @@
 
         // Función para iniciar el juego
         async function startGame() {
-            document.getElementById('nameModal').style.display = 'none';
+            async function startGame() {
+                document.getElementById('nameModal').style.display = 'none';
 
-            // Solicitar permisos de DeviceMotion para iOS 13+
-            if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                const permissionState = await DeviceMotionEvent.requestPermission();
-                if (permissionState === 'granted') {
-                    console.log('Permiso de DeviceMotion concedido.');
-                    setupGyroscope();
+                // Solicitar permisos de DeviceMotion para iOS 13+
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    const permissionState = await DeviceMotionEvent.requestPermission();
+                    if (permissionState === 'granted') {
+                        console.log('Permiso de DeviceMotion concedido.');
+                        setupGyroscope();
+                    } else {
+                        console.warn('Permiso de DeviceMotion denegado.');
+                        alert('El acceso al giroscopio es necesario para el control por movimiento. Por favor, habilítalo en la configuración de tu dispositivo.');
+                        // Puedes decidir qué hacer si el permiso es denegado, por ejemplo, mantener el control por teclado.
+                    }
                 } else {
-                    console.warn('Permiso de DeviceMotion denegado.');
-                    alert('El acceso al giroscopio es necesario para el control por movimiento. Por favor, habilítalo en la configuración de tu dispositivo.');
-                    // Puedes decidir qué hacer si el permiso es denegado, por ejemplo, mantener el control por teclado.
+                    // Navegadores que no requieren solicitud explícita (Android, etc.)
+                    console.log('DeviceMotionEvent disponible sin solicitud de permiso.');
+                    setupGyroscope();
                 }
-            } else {
-                // Navegadores que no requieren solicitud explícita (Android, etc.)
-                console.log('DeviceMotionEvent disponible sin solicitud de permiso.');
-                setupGyroscope();
-            }
 
+                // --- AQUÍ ES DONDE SE SOLICITARÍA EL PERMISO DE NOTIFICACIONES ---
+                if ('Notification' in window && 'serviceWorker' in navigator) {
+                    Notification.requestPermission().then(function (permission) {
+                        if (permission === "granted") {
+                            console.log("Permiso de notificación concedido.");
+                            // Una vez concedido el permiso, puedes suscribirte al servicio push
+                            // si planeas enviar notificaciones desde el servidor.
+                            subscribeToPushNotifications(); // Esta función la definirías aparte
+                        } else {
+                            console.warn("Permiso de notificación denegado.");
+                        }
+                    });
+                }
+            }
             // Configurar WebSocket
             socket.onopen = function (e) {
                 console.log("Conexión WebSocket establecida");
@@ -325,6 +340,41 @@
                 var keycode = e.which || window.event.keycode;
                 game.keyUp(keycode);
             });
+
+            function subscribeToPushNotifications() {
+                // Reemplaza 'TU_CLAVE_PUBLICA_VAPID_AQUI' con tu clave VAPID pública real
+                const applicationServerKey = 'BKGW0JZDR6SDTKkk_YZ9R-cMb7h64Fqqy-C8scMGhkdxlnbCn_dS7AfC5P-aipVG98WM2CTrA3BvR78meRcMShU';
+
+                if ('serviceWorker' in navigator && 'PushManager' in window) {
+                    navigator.serviceWorker.ready.then(function (registration) {
+                        return registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(applicationServerKey)
+                        });
+                    }).then(function (subscription) {
+                        console.log('Suscripción push:', JSON.stringify(subscription));
+                        // Aquí deberías enviar esta 'subscription' a tu servidor backend
+                        // para que pueda usarla para enviar notificaciones push.
+                        // Por ejemplo: sendSubscriptionToServer(subscription);
+                    }).catch(function (error) {
+                        console.error('Error al suscribirse al push:', error);
+                    });
+                }
+            }
+
+            // Función de utilidad para convertir la clave VAPID de base64 a Uint8Array
+            function urlBase64ToUint8Array(base64String) {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/\-/g, '+')
+                    .replace(/_/g, '/');
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                return outputArray;
+            }
         }
 
         // Función para configurar el giroscopio

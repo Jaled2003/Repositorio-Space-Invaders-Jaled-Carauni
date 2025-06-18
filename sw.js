@@ -27,7 +27,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   // Solo manejamos solicitudes GET
   if (event.request.method !== 'GET') return;
-  
+
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
@@ -35,7 +35,7 @@ self.addEventListener('fetch', (event) => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        
+
         // Si no está en caché, haz la petición a red
         return fetch(event.request)
           .then(response => {
@@ -63,4 +63,33 @@ self.addEventListener('activate', (event) => {
     })
   );
   console.log('Service Worker activado y listo');
+});
+
+
+self.addEventListener('push', (event) => {
+  const options = {
+    body: event.data.text() || 'Nueva notificación de Space Invaders',
+    icon: '/Iconos/android-launchericon-192-192.png', // Asegúrate de que esta ruta sea correcta
+    vibrate: [200, 100, 200],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: '2'
+    },
+    actions: [
+      { action: 'explore', title: 'Abrir Juego', icon: 'images/checkmark.png' },
+      { action: 'close', title: 'Cerrar', icon: 'images/xmark.png' },
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('Space Invaders Actualización', options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close(); // Cierra la notificación
+  var fullPath = self.location.origin + event.notification.data.path; // Puedes pasar una 'path' en los datos de la notificación
+  event.waitUntil(
+    clients.openWindow(fullPath || '/') // Abre la aplicación o una URL específica
+  );
 });
